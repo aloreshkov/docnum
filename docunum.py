@@ -7,7 +7,7 @@
 # document = Document('имя_файла.docx')
 # docunum = docunum.DocuNum(document)
 #
-# for paragraph in self.document.paragraphs:
+# for paragraph in document.paragraphs:
 #     if paragraph._element.pPr is not None and paragraph._element.pPr.numPr is not None:
 #         print(paragraph._element.pPr.numPr.text)
 
@@ -21,7 +21,7 @@
 # document = Document('имя_файла.docx')
 # docunum = docunum.DocuNum(document)
 #
-# for paragraph in self.document.paragraphs:
+# for paragraph in document.paragraphs:
 #     if paragraph._element.pPr is not None and paragraph._element.pPr.numPr is not None:
 #         print(paragraph._element.pPr.numPr.text)
 
