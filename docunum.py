@@ -503,7 +503,7 @@ class DocuNum:
 
         Returns a Numbs object containing the list of all level sets used in the document.
         """
-        
+
         doc_numbs = Numbs()
         # Получаем список наборов уровней, используемых в документе
         num_def = self.document.part.numbering_part.numbering_definitions._numbering.num_lst
@@ -673,9 +673,18 @@ class DocuNum:
         return self.get_num_by_paraId(self.get_para_id(paragraph))
 
     def set_num_in_paragraf(self, paragraph: BaseOxmlElement)->None:
-        """Метод устанавливает для параграфа в свойстве _element.pPr.numPr.text значение элемента списка
-         (если в нем используется список)\n
-         paragraph - объект параграф, для которого выполняется установка значения"""
+        """Метод устанавливает для параграфа в свойстве _element.pPr.numPr.text значение элемента списка (если в нем используется список)
+         paragraph - объект параграф, для которого выполняется установка значения
+
+        Sets the list element value in the paragraph's ``_element.pPr.numPr.text`` property
+        (if the paragraph uses a list).
+
+        Parameters
+        ----------
+        paragraph : Paragraph
+            The paragraph object for which the value is being set.
+        """
+
         # Проверяем использование в параграфе списка
         if paragraph._element.pPr is not None and paragraph._element.pPr.numPr is not None:
             # Если список используется, устанавливаем значение свойства
@@ -683,7 +692,10 @@ class DocuNum:
             paragraph._element.pPr.numPr.text = result_num
 
     def set_num(self)->None:
-        """Метод устанавливает значения элементов списков по отдельным параграфам и ячейкам всех таблиц документа"""
+        """Метод устанавливает значения элементов списков по отдельным параграфам и ячейкам всех таблиц документа
+
+        Sets the list element values for individual paragraphs and cells in all tables of the document.
+        """
         # Перебираем все отдельные параграфы документа и устанавливаем значения (если в них используются списки)
         for paragraph in self.document.paragraphs:
             self.set_num_in_paragraf(paragraph)
