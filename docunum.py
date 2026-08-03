@@ -142,19 +142,22 @@ class Lvl:
              f"lvlText={self.lvlText}\n")
         return s
 
-    def get_value(self, call_lvl:int)->str:
-        """Метод возвращает текущее значение для уровня.
-         call_lvl - номер уровня, с которого происходит вызов.
+    def get_value(self, call_lvl:int)->tuple[str,bool]:
+        """Метод возвращает кортеж с текущим значением для уровня списка и
+        признаком необходимости сброса значений нижележащих уровней.
+        call_lvl - номер уровня, с которого происходит вызов.
 
-        Return the current numbering value for this level, optionally incrementing
-        the counter based on the caller's level.
+        Returns a tuple containing the current value for the list level and the flag indicating
+        whether the values of lower levels need to be reset.
+
 
         This method handles two main cases:
 
-        - If the numbering type is a bullet (``self.numFmt == 'bullet'``), it returns the static bullet text from ``self.lvlText`` without modifying state.
+        - If the numbering type is a bullet (``self.numFmt == 'bullet'``), it returns
+          the static bullet text from ``self.lvlText`` without modifying state.
         - For numeric formats, it increments the internal counter (``self.current``)
-        only when called from the same level as this one, and only if this is a
-        new logical step in the list traversal (determined via ``self.lastCallLvl``).
+          only when called from the same level as this one, and only if this is a
+          new logical step in the list traversal (determined via ``self.lastCallLvl``).
 
         After computing the value, the method records ``call_lvl`` as the last caller
         in ``self.lastCallLvl`` to support correct increment behavior on subsequent calls.
@@ -170,10 +173,14 @@ class Lvl:
         str
             The rendered numbering string for the current state of this level
             (e.g., "1.", "1.2.3", or a bullet symbol).
-"""
+        bool
+            The flag indicating whether the values of lower levels need to be reset
+        """
+        reset_underlaying_levels = False
+
         # Если тип нумерации символ, то сразу возвращаем его значение
         if self.numFmt == 'bullet':
-            return self.lvlText
+            return self.lvlText, reset_underlaying_levels
         else:
             # Если тип нумерации не символ, то проверяем, с какого уровня был последний вызов
             if self.lastCallLvl is not None:
@@ -182,11 +189,13 @@ class Lvl:
                 if call_lvl == self.ilvl and (self.lastCallLvl != self.ilvl or self.lastCallLvl == call_lvl):
                     # увеличиваем текущий номер
                     self.increment_value()
+                    # устанавливаем признак необходимости сброса значений нижележащих уровней
+                    reset_underlaying_levels = True
         # Получаем строку со значением номера
         value = self.get_value_by_type(self.current, self.numFmt)
         # Запоминаем номер уровня с которого идет текущий вызов
         self.lastCallLvl = call_lvl
-        return value
+        return value, reset_underlaying_levels
 
     def increment_value(self)->None:
         """Метод увеличивает текущее значение для уровня нумерации,
@@ -225,6 +234,14 @@ class Lvl:
         if nfmt not in numbering_classes_dict:
             nfmt = 'decimal'
         return numbering_classes_dict[nfmt].num_value(value)
+
+    def reset_value(self)->None:
+        """Метод сбрасывает нумерацию уровня
+
+        The method resets the level numbering.
+        """
+        self.current = self.start
+        self.lastCallLvl = None
 
 
 class AbstructNum:
@@ -604,10 +621,17 @@ class DocuNum:
                     level = int(item[1:])-1
                     # Получаем объект, описывающий уровень списка, по его номеру
                     curLvl = num_obj.levels[level]
-                    # Получаем строку со значением для этого уровня списка
-                    levelText = curLvl.get_value(ilvl)
+                    # Получаем строку со значением для этого уровня списка и признак необходимости
+                    # перезапуска нумерации на нижележащих уровнях
+                    levelText , reset_underlaying_levels = curLvl.get_value(ilvl)
                     # Замещаем обозначение уровня, его значением
                     text_str = text_str.replace(item,levelText)
+                    # Если установлен флаг сброса значений нижележащих уровней
+                    if reset_underlaying_levels and len(num_obj.levels)>level+1:
+                        # Перебираем уровни +1 к текущему и выполняем для них сброс
+                        for lvl in num_obj.levels[level+1:]:
+                            lvl.reset_value()
+
                 return text_str
             else:
                 return None
