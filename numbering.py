@@ -2,7 +2,7 @@
 #
 # Экземпляры классов не создаются. От родительского класса Numbering создаются дочерние в которых происходит
 # преобразование числового значения в требуемое строковое. Соответствие между типом элементов списка и именем
-# класса задается в свойстве класса numbering_class.
+# класса задается в атрибуте класса numbering_class.
 #
 # Для получения значений элементов списка в нижнем регистре, применяется вызов метода num_value
 # класса, возвращающего требуемое значение в верхнем регистре, с последующим вызовом для результата метода lower().
@@ -14,7 +14,7 @@
 #
 # Class instances are not created directly. Instead, child classes are derived from the base `Numbering` class,
 # where the conversion from a numeric value to the required string representation is implemented.
-# The mapping between the list item type and the corresponding class name is defined in the class property `numbering_class`.
+# The mapping between the list item type and the corresponding class name is defined in the class attribute `numbering_class`.
 #
 # To obtain list item values in lowercase, call the `num_value` method of the class which returns the value in uppercase
 # and then apply the `lower()` method to the result.
@@ -22,6 +22,16 @@
 # The `AnyLetterNumbering` class implements value retrieval for a list item based on any set of characters.
 # No child classes are created from `AnyLetterNumbering`.
 
+# Словарь с классами, реализующими получение значение элемента списка
+# Dictionary with classes that implement retrieval of a list item value.
+numbering_classes_dict = {}
+
+# Функция реализует декоратор, наполняющий словарь numbering_classes_dict при определении класса
+# The function implements a decorator that populates the `numbering_classes_dict` dictionary
+# when a class is defined.
+def numbering_classes_register(obj):
+    numbering_classes_dict[obj.numbering_class] = obj
+    return obj
 
 class Numbering:
     """Родительский класс для создания дочерних классов,
@@ -40,6 +50,7 @@ class Numbering:
         pass
 
 
+@numbering_classes_register
 class DecimalNumbering(Numbering):
     """Дочерний класс для класса `Numbering`, реализует преобразование в арабские цифры.
 
@@ -51,6 +62,7 @@ class DecimalNumbering(Numbering):
         return str(value)
 
 
+@numbering_classes_register
 class RomanNumbering(Numbering):
     """Дочерний класс для класса Numbering, реализует преобразование в римские цифры (латиница верхний регистр).
 
@@ -72,6 +84,7 @@ class RomanNumbering(Numbering):
         return roman
 
 
+@numbering_classes_register
 class RomanNumberingLower(Numbering):
     """Дочерний класс для класса Numbering, реализует преобразование в римские цифры (латиница нижний регистр).
 
@@ -99,6 +112,7 @@ class AnyLetterNumbering:
         return result
 
 
+@numbering_classes_register
 class LetterNumbering(Numbering):
     """Дочерний класс для класса `Numbering`, реализует значение в виде букв латинского алфавита (латиница верхний регистр)
 
@@ -111,6 +125,7 @@ class LetterNumbering(Numbering):
         return AnyLetterNumbering.num_value(value, letters_lst)
 
 
+@numbering_classes_register
 class LetterNumberingLower(Numbering):
     """Дочерний класс для класса `Numbering`, реализует значение в виде букв латинского алфавита (латиница нижний регистр).
 
@@ -122,6 +137,7 @@ class LetterNumberingLower(Numbering):
         return LetterNumbering.num_value(value).lower()
 
 
+@numbering_classes_register
 class RussianNumbering(Numbering):
     """Дочерний класс для класса `Numbering`, реализует значение в виде букв русского алфавита (кириллица верхний регистр).
 
@@ -134,49 +150,12 @@ class RussianNumbering(Numbering):
         return AnyLetterNumbering.num_value(value, letters_lst)
 
 
+@numbering_classes_register
 class RussianNumberingLower(Numbering):
     """Дочерний класс для класса `Numbering`, реализует значение в виде букв русского алфавита (кириллица нижний регистр).
 
     Child class of `Numbering` that implements value generation as Cyrillic lowercase letters.
     """
-    numbering_class = 'russianLower'
-
-    def num_value(value:int)->str:
-        return RussianNumbering.num_value(value).lower()
-        # Если остаток от деления равен нулю, то количество букв равно частному,
-        # в ином случае, частому + 1
-        result = main_chr * (quotient + (1 if remainder > 0 else 0))
-        return result
-
-
-class LetterNumbering(Numbering):
-    """Дочерний класс для класса Numbering, реализует значение в виде букв латинского алфавита (латиница верхний регистр)"""
-    numbering_class = 'upperLetter'
-
-    def num_value(value:int)->str:
-        letters_lst = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
-        return AnyLetterNumbering.num_value(value, letters_lst)
-
-
-class LetterNumberingLower(Numbering):
-    """Дочерний класс для класса Numbering, реализует значение в виде букв латинского алфавита (латиница нижний регистр)"""
-    numbering_class = 'lowerLetter'
-
-    def num_value(value:int)->str:
-        return LetterNumbering.num_value(value).lower()
-
-
-class RussianNumbering(Numbering):
-    """Дочерний класс для класса Numbering, реализует значение в виде букв русского алфавита (кириллица верхний регистр)"""
-    numbering_class = 'russianUpper'
-
-    def num_value(value:int)->str:
-        letters_lst = list('АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЫЭЮЯ')
-        return AnyLetterNumbering.num_value(value, letters_lst)
-
-
-class RussianNumberingLower(Numbering):
-    """Дочерний класс для класса Numbering, реализует значение в виде букв русского алфавита (кириллица нижний регистр)"""
     numbering_class = 'russianLower'
 
     def num_value(value:int)->str:
