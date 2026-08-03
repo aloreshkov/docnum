@@ -58,71 +58,47 @@ def get_attribute_uri_mame(nsmap:dict, value:str)->str:
     return "{"+nsmap[pref]+"}"+tag
 
 
-def get_numbering_classes()->dict:
-    """Функция создает словарь описывающий соответствие между типами нумерации в документе и классами,
-    которые их реализуют. в модуле ``docnum.numbering``
-
-    Create a dictionary that maps numbering types in a Word document to their
-    implementing classes in ``docnum.numbering``.
-
-    Returns:
-        dict: Mapping from numbering type IDs (e.g., abstractNumId, style name)
-              to corresponding handler classes."""
-    numbering_classes_dict = {}
-    # Получаем список классов дочерних от класса Numbering
-    subclasses = numbering.Numbering.__subclasses__()
-    for subclass in subclasses:
-        # Проверяем наличие у класса атрибута numbering_class
-        if hasattr(subclass, 'numbering_class'):
-            numbering_class = subclass.numbering_class
-            # Добавляем соответствие в словарь
-            numbering_classes_dict[numbering_class] = subclass
-    return numbering_classes_dict
-
-
-numbering_classes_dict = get_numbering_classes()
-
-
 class Lvl:
     """Класс содержит описание уровня нумерации, полученное из файла numbering.xml.
 
     Represents a single numbering level definition extracted from ``numbering.xml``
-    in a Word document (Office Open XML format)."""
+    in a Word document (Office Open XML format).
+    """
 
     def __init__(self,src,ilvl:int,start:int=1,numFmt:str='',lvlText:str=''):
-        """src - исходный объект, описывающий уровень
-    ilvl - номер уровня
-    start - стартовое значение для уровня
-    numFmt - строка, указывающая тип нумерации (ключ для словаря numbering_classes_dict)
-    lvlText - строка, описывающая формат значения номера для текущего уровня
-    current - текущее значение номера для уровня
-    lastCallLvl - номер уровня нумерации, с которого в последний раз был вызов за значением данного уровня нумерации.
-    Если обращений не было, то None
+        """`src` - исходный объект, описывающий уровень.
+        `ilvl` - номер уровня,
+        `start` - стартовое значение для уровня,
+        `numFmt` - строка, указывающая тип нумерации (ключ для словаря numbering_classes_dict),
+        `lvlText` - строка, описывающая формат значения номера для текущего уровня,
+        `current` - текущее значение номера для уровня,
+        `lastCallLvl` - номер уровня нумерации, с которого в последний раз был вызов за значением данного уровня нумерации.
+        Если обращений не было, то `None`
 
-    Initialize a numbering level handler for Word document processing.
+        Initialize a numbering level handler for Word document processing.
 
-    Parameters
-    ----------
-    src : object
-        Source object describing the numbering level.
-    ilvl : int
-        Level index (0-based) of the numbering hierarchy.
-    start : int, optional
-        Starting value for the level counter (default is 1).
-    numFmt : str, optional
-        Numbering format string (default is '').
-    lvlText : str, optional
-        Format template for the displayed number at this level (e.g. '%1.', '(%1)'),
-        used when rendering the number text (default is '').
+        Parameters
+        ----------
+        src : object
+            Source object describing the numbering level.
+        ilvl : int
+            Level index (0-based) of the numbering hierarchy.
+        start : int, optional
+            Starting value for the level counter (default is 1).
+        numFmt : str, optional
+            Numbering format string (default is '').
+        lvlText : str, optional
+            Format template for the displayed number at this level (e.g. '%1.', '(%1)'),
+            used when rendering the number text (default is '').
 
-    Attributes
-    ----------
-    current : int
-        Current counter value for this level, initialized to `start`.
-    lastCallLvl : int | None
-        The level index from which the current level was last requested.
-        `None` if no such request has occurred yet.
-"""
+        Attributes
+        ----------
+        current : int
+            Current counter value for this level, initialized to `start`.
+        lastCallLvl : int | None
+            The level index from which the current level was last requested.
+            `None` if no such request has occurred yet.
+        """
         self.src = src
         self.ilvl = ilvl
         self.start = start
@@ -135,7 +111,8 @@ class Lvl:
         """Метод реализован только для отладки
 
         This method is implemented solely for debugging and should not be used
-        in production code."""
+        in production code.
+        """
         s = (f"ilvl={self.ilvl}\n"
              f"start={self.start}\n"
              f"numFmt={self.numFmt}\n"
@@ -145,7 +122,7 @@ class Lvl:
     def get_value(self, call_lvl:int)->tuple[str,bool]:
         """Метод возвращает кортеж с текущим значением для уровня списка и
         признаком необходимости сброса значений нижележащих уровней.
-        call_lvl - номер уровня, с которого происходит вызов.
+        `call_lvl` - номер уровня, с которого происходит вызов.
 
         Returns a tuple containing the current value for the list level and the flag indicating
         whether the values of lower levels need to be reset.
@@ -201,7 +178,8 @@ class Lvl:
         """Метод увеличивает текущее значение для уровня нумерации,
         исключая нумерацию с помощью символов.
 
-        Increment the current counter value for this numbering level, except bullet."""
+        Increment the current counter value for this numbering level, except bullet.
+        """
         if self.numFmt != 'bullet':
             self.current += 1
 
@@ -210,8 +188,8 @@ class Lvl:
         Если в словаре ``numbering_classes_dict`` нет соответствующего формату номера,
         используется десятичная нумерация
 
-        value - значение
-        nfmt - тип нумерации
+        `value` - значение,
+        `nfmt` - тип нумерации.
 
         Render a numbering string for a given counter value and format type.
 
@@ -231,9 +209,9 @@ class Lvl:
         str
             The formatted numbering string (e.g. "1.", "a)", "(i)").
         """
-        if nfmt not in numbering_classes_dict:
+        if nfmt not in numbering.numbering_classes_dict:
             nfmt = 'decimal'
-        return numbering_classes_dict[nfmt].num_value(value)
+        return numbering.numbering_classes_dict[nfmt].num_value(value)
 
     def reset_value(self)->None:
         """Метод сбрасывает нумерацию уровня
@@ -249,13 +227,15 @@ class AbstructNum:
     полученного из одного тэга ``w:abstructNumbering`` файла ``numbering.xml``.
 
      Represents a single abstract numbering style defined in a Word document’s
-     ``numbering.xml``, corresponding to one ``<w:abstractNum>`` element."""
+     ``numbering.xml``, corresponding to one ``<w:abstractNum>`` element.
+     """
+
     def __init__(self,src,abstructNumId:int,restartNumberingAfterBreak:int,multiLevelType:str=''):
-        """src - исходный объект, описывающий набор уровней,
-        abstructNumId - номер набора,
-        restartNumberingAfterBreak - свойство набора, из файла,
-        multiLevelType - свойство набора, из файла,
-        levels - список объектов ``Lvl``
+        """`src` - исходный объект, описывающий набор уровней,
+        `abstructNumId` - номер набора,
+        `restartNumberingAfterBreak` - свойство набора, из файла,
+        `multiLevelType` - свойство набора, из файла,
+        `levels` - список объектов ``Lvl``
 
         Initialize a numbering set definition.
 
@@ -280,12 +260,14 @@ class AbstructNum:
 
     def add_level(self, level:Lvl):
         """Метод добавляет в свойство levels объект ``Lvl`` c описанием уровня нумерации.
-        level - объект ``Lvl``
+        `level` - объект ``Lvl``.
+
         Add or update a numbering level definition
 
         Parameters
         ----------
-        level : ``Lvl`` The level object """
+        level : ``Lvl`` The level object
+        """
         # Если объект с таким уровнем нумерации уже есть, то замещаем имеющийся
         if level.ilvl < len(self.levels):
             self.levels[level.ilvl] = level
@@ -298,7 +280,8 @@ class AbstructNum:
         """Метод реализован только для отладки
 
         This method is implemented solely for debugging and should not be used
-        in production code."""
+        in production code.
+        """
         s = (f"abstructNumId={self.abstructNumId}\n"
              f"restartNumberingAfterBreak={self.restartNumberingAfterBreak}\n"
              f"multiLevelType={self.multiLevelType}\n")
@@ -312,7 +295,8 @@ class Num:
     полученного из одного тэга ``w:num`` файла ``numbering.xml``.
 
      Represents a single numbered list instance in a Word document,
-     corresponding to one ``<w:num>`` element in ``numbering.xml``."""
+     corresponding to one ``<w:num>`` element in ``numbering.xml``.
+     """
     def __init__(self, src, numId:int, abstructNum:AbstructNum):
         """src - исходный объект, описывающий набор уровней,
         numId - номер используемого уровня,
