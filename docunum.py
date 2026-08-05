@@ -549,7 +549,7 @@ class DocuNum:
             # Получаем параграф в виде объекта skelmis.docx
             test_obj = parse_xml(ET.tostring(paragraph))
             # Если в параграфе есть атрибуты pPr и numPr, то он содержит элемент списка
-            if test_obj.pPr is not None and test_obj.pPr.numPr is not None:
+            if self.check_num_in_paragraf(test_obj):
                 # Получаем используемый номер набора уровней
                 num_id = test_obj.pPr.numPr.numId.val
                 # Получаем номер уровня списка в наборе
@@ -694,10 +694,11 @@ class DocuNum:
         """
 
         # Проверяем использование в параграфе списка
-        if paragraph._element.pPr is not None and paragraph._element.pPr.numPr is not None:
+        if self.check_num_in_paragraf(paragraph):
             # Если список используется, устанавливаем значение свойства
             result_num = self.get_num_by_paragraf(paragraph)
-            paragraph._element.pPr.numPr.text = result_num
+            if result_num is not None:
+                paragraph._element.pPr.numPr.text = result_num
 
     def set_num(self)->None:
         """Метод устанавливает значения элементов списков по отдельным параграфам и ячейкам всех таблиц документа
@@ -716,3 +717,21 @@ class DocuNum:
                     # Перебираем все параграфы в ячейке и устанавливаем значения (если в них используются списки)
                     for paragraph in cell.paragraphs:
                         self.set_num_in_paragraf(paragraph)
+
+    def check_num_in_paragraf(self, paragraph: BaseOxmlElement)->bool:
+        """Метод проверяет наличие в параграфе списка по значениям атрибутов `pPr` и `numPr` объекта.
+        paragraph - проверяемый объект.
+
+        The method checks whether the paragraph contains a list by examining the `pPr` and `numPr` attribute values of the object.
+
+        Parameters
+        ----------
+        paragraph : object
+            The paragraph object to be checked.
+        """
+        if hasattr(paragraph,'pPr'):
+            return paragraph.pPr is not None and paragraph.pPr.numPr is not None
+        elif hasattr(paragraph,'_element'):
+            return paragraph._element.pPr is not None and paragraph._element.pPr.numPr is not None
+        else:
+            return False
